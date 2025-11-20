@@ -27,6 +27,7 @@ enum class SharedPreferencesKeys(val key: String, val description: String) {
     ENABLE_INSTRUMENT_EV_BATTERY_PERCENTAGE("enableInstrumentEvBatteryPercentage", "Habilitar porcentagem da bateria EV no painel de instrumentos"),
     ENABLE_INSTRUMENT_CUSTOM_MEDIA_INTEGRATION("enableInstrumentCustomMediaIntegration", "Habilitar integração personalizada de mídia no painel de instrumentos"),
     ENABLE_AC_CONTROL_VIA_STEERING_WHEEL("enableAcControlViaSteeringWheel", "Habilitar controle de ar-condicionado pelo volante"),
+    ENABLE_AC_INTELLIGENT_SWITCH("enableAcIntelligentSwitch", "Habilitar controle inteligente de ar-condicionado"),
     INSTRUMENT_REVISION_KM("instrumentRevisionKm", "Quilometragem para aviso de revisão no painel de instrumentos"),
     INSTRUMENT_REVISION_NEXT_DATE("instrumentRevisionNextDate", "Data da próxima revisão no painel de instrumentos"),
     DISABLE_AVAS("disableAvas", "Desativar AVAS (sistema de alerta de veículo silencioso)"),
