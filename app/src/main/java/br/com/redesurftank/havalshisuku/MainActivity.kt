@@ -313,7 +313,7 @@ fun BasicSettingsTab() {
     var closeSunroofOnFoldMirror by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_ON_FOLD_MIRROR.key, false)) }
     var closeSunroofSunShadeOnCloseSunroof by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_SUN_SHADE_ON_CLOSE_SUNROOF.key, false)) }
     var enableControlAcViaSteeringWheel by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.key, false)) }
-    var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, false)) }
+    var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, true)) }
     var setStartupVolume by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.SET_STARTUP_VOLUME.key, false)) }
     var volume by remember { mutableIntStateOf(prefs.getInt(SharedPreferencesKeys.STARTUP_VOLUME.key, 1)) }
     var closeWindowsOnSpeed by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_WINDOWS_ON_SPEED.key, false)) }
