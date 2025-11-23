@@ -314,6 +314,7 @@ fun BasicSettingsTab() {
     var closeSunroofSunShadeOnCloseSunroof by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_SUN_SHADE_ON_CLOSE_SUNROOF.key, false)) }
     var enableControlAcViaSteeringWheel by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.key, false)) }
     var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, true)) }
+    var enableAcMaxSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, true)) }
     var setStartupVolume by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.SET_STARTUP_VOLUME.key, false)) }
     var volume by remember { mutableIntStateOf(prefs.getInt(SharedPreferencesKeys.STARTUP_VOLUME.key, 1)) }
     var closeWindowsOnSpeed by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_WINDOWS_ON_SPEED.key, false)) }
@@ -474,6 +475,17 @@ fun BasicSettingsTab() {
                 onCheckedChange = {
                     enableIntelligentSwitch = it
                     prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, it) }
+                    ServiceManager.getInstance().setIntelligentAcSwitchEnabled(it)
+                }
+            ),
+            SettingItem(
+                title = "Potência máxima do A/C",
+                description = SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.description,
+                checked = enableAcMaxSwitch,
+                onCheckedChange = {
+                    enableAcMaxSwitch = it
+                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, it) }
+                    ServiceManager.getInstance().setAcMaxSwitchEnabled(it)
                 }
             ),
             SettingItem(
@@ -1887,9 +1899,9 @@ fun InformacoesTab() {
         return withContext(Dispatchers.IO) {
             try {
                 val endpoint = if (isPreview)
-                    "https://api.github.com/repos/bobaoapae/haval-app-tool-multimidia/releases"
+                    "https://api.github.com/repos/igormusardo/haval-app-tool-multimidia/releases"
                 else
-                    "https://api.github.com/repos/bobaoapae/haval-app-tool-multimidia/releases/latest"
+                    "https://api.github.com/repos/igormusardo/haval-app-tool-multimidia/releases/latest"
 
                 val url = URL(endpoint)
                 val conn = url.openConnection() as HttpURLConnection

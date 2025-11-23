@@ -90,9 +90,13 @@ public class ServiceManager {
             CarConstants.CAR_HVAC_ANION_ENABLE,
             CarConstants.CAR_HVAC_BLOWER_MODE,
             CarConstants.CAR_HVAC_CYCLE_MODE,
+            CarConstants.CAR_HVAC_ACMAX_ENABLE,
+            CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE,
+            CarConstants.CAR_HVAC_INTELLIGENT_TEMPERATURE_RANGE,
             CarConstants.CAR_HVAC_DRIVER_TEMPERATURE,
             CarConstants.CAR_HVAC_FAN_SPEED,
             CarConstants.CAR_HVAC_FRONT_DEFROST_ENABLE,
+            CarConstants.CAR_HVAC_SETTING_AUTO_DEFROST_ENABLE,
             CarConstants.CAR_HVAC_PASS_TEMPERATURE,
             CarConstants.CAR_HVAC_POWER_MODE,
             CarConstants.CAR_HVAC_SYNC_ENABLE,
@@ -429,7 +433,7 @@ public class ServiceManager {
                                     if (clusterCardView == 1) {
                                         var currentCycleMode = getUpdatedData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue());
                                         if (currentCycleMode != null) {
-                                            boolean cycleMode = currentCycleMode.equals("1");
+                                            boolean cycleMode = currentCycleMode.equals("0");
                                             cycleMode = !cycleMode;
                                             updateData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue(), cycleMode ? "1" : "0");
                                         }
@@ -566,6 +570,12 @@ public class ServiceManager {
             if (isForceDisableIntelligentAcSwitch) {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
+            }
+
+            boolean isForceEnableAcMaxSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.getKey(), true);
+            if (isForceEnableAcMaxSwitch) {
+                setAcMaxSwitchEnabled(true);
+                Log.w(TAG, "AC Max switch enabled by user preference");
             }
 
             ensureSteeringWheelButtonIntegration();
@@ -1107,6 +1117,20 @@ public class ServiceManager {
             Log.w(TAG, "Intelligent AC switch enabled: " + b);
         } catch (RemoteException e) {
             Log.e(TAG, "Error setting Intelligent AC switch", e);
+        }
+    }
+
+
+    public void setAcMaxSwitchEnabled(boolean b) {
+        if (controlService == null) {
+            Log.e(TAG, "ControlService not initialized");
+            return;
+        }
+        try {
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), b ? "1" : "0");
+            Log.w(TAG, "AC Max switch enabled: " + b);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error setting AC Max switch", e);
         }
     }
 
