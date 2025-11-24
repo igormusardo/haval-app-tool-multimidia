@@ -94,6 +94,7 @@ public class ServiceManager {
             CarConstants.CAR_HVAC_BLOWER_MODE,
             CarConstants.CAR_HVAC_CYCLE_MODE,
             CarConstants.CAR_HVAC_ACMAX_ENABLE,
+            CarConstants.CAR_HVAC_HEATING_ENABLE,
             CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE,
             CarConstants.CAR_HVAC_INTELLIGENT_TEMPERATURE_RANGE,
             CarConstants.CAR_HVAC_DRIVER_TEMPERATURE,
