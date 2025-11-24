@@ -314,6 +314,7 @@ fun BasicSettingsTab() {
     var closeSunroofSunShadeOnCloseSunroof by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_SUN_SHADE_ON_CLOSE_SUNROOF.key, false)) }
     var enableCustomMenu by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_CUSTOM_MENU.key, false)) }
     var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, true)) }
+    var enableHeatingSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.key, false)) }
     var enableAcMaxSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, false)) }
     var setStartupVolume by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.SET_STARTUP_VOLUME.key, false)) }
     var volume by remember { mutableIntStateOf(prefs.getInt(SharedPreferencesKeys.STARTUP_VOLUME.key, 1)) }
