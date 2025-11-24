@@ -475,6 +475,7 @@ fun BasicSettingsTab() {
                 onCheckedChange = {
                     enableIntelligentSwitch = it
                     prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, it) }
+                    ServiceManager.getInstance().setIntelligentAcSwitchEnabled(!it)
                 }
             ),
             SettingItem(
@@ -484,6 +485,7 @@ fun BasicSettingsTab() {
                 onCheckedChange = {
                     enableAcMaxSwitch = it
                     prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, it) }
+                    ServiceManager.getInstance().setAcMaxSwitchEnabled(!it)
                 }
             ),
             SettingItem(
