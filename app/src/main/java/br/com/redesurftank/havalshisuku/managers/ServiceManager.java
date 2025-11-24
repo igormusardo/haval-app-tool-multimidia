@@ -433,7 +433,7 @@ public class ServiceManager {
                                     if (clusterCardView == 1) {
                                         var currentCycleMode = getUpdatedData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue());
                                         if (currentCycleMode != null) {
-                                            boolean cycleMode = currentCycleMode.equals("0");
+                                            boolean cycleMode = currentCycleMode.equals("1");
                                             cycleMode = !cycleMode;
                                             updateData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue(), cycleMode ? "1" : "0");
                                         }
@@ -566,7 +566,7 @@ public class ServiceManager {
             if (sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_SEAT_VENTILATION_ON_AC_ON.getKey(), false) && getUpdatedData(CarConstants.CAR_HVAC_POWER_MODE.getValue()).equals("1")) {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "3");
             }
-            boolean isForceDisableIntelligentAcSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.getKey(), true);
+            boolean isForceDisableIntelligentAcSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.getKey(), false);
             if (isForceDisableIntelligentAcSwitch) {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
@@ -574,7 +574,7 @@ public class ServiceManager {
 
             boolean isForceEnableAcMaxSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.getKey(), true);
             if (isForceEnableAcMaxSwitch) {
-                setAcMaxSwitchEnabled(true);
+                setAcMaxSwitchEnabled(false);
                 Log.w(TAG, "AC Max switch enabled by user preference");
             }
 
@@ -1028,6 +1028,10 @@ public class ServiceManager {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "3");
             } else if (key.equals(CarConstants.CAR_HVAC_POWER_MODE.getValue()) && value.equals("0") && sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_SEAT_VENTILATION_ON_AC_ON.getKey(), false)) {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "0");
+            } else if (key.equals(CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue())) {
+                updateData(CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), value);
+            } else if (key.equals(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue())) {
+                updateData(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue(), value);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error in OnDataChanged", e);
