@@ -26,7 +26,7 @@ enum class SharedPreferencesKeys(val key: String, val description: String) {
     ENABLE_INSTRUMENT_REVISION_WARNING("enableInstrumentRevisionWarning", "Habilitar aviso de revisão no painel de instrumentos"),
     ENABLE_INSTRUMENT_EV_BATTERY_PERCENTAGE("enableInstrumentEvBatteryPercentage", "Habilitar porcentagem da bateria EV no painel de instrumentos"),
     ENABLE_INSTRUMENT_CUSTOM_MEDIA_INTEGRATION("enableInstrumentCustomMediaIntegration", "Habilitar integração personalizada de mídia no painel de instrumentos"),
-    ENABLE_AC_CONTROL_VIA_STEERING_WHEEL("enableAcControlViaSteeringWheel", "Habilitar controle de ar-condicionado pelo volante"),
+    ENABLE_CUSTOM_MENU("enableCustomMenu", "Exibe um menu customizado no cluster controlado pelas teclas do volante"),
     ENABLE_AC_INTELLIGENT_SWITCH("enableAcIntelligentSwitch", "Habilitar controle inteligente de ar-condicionado"),
     ENABLE_AC_MAX_SWITCH("enableAcMaxSwitch", "Habilitar potência máxima do ar-condicionado"),
     INSTRUMENT_REVISION_KM("instrumentRevisionKm", "Quilometragem para aviso de revisão no painel de instrumentos"),
@@ -50,4 +50,7 @@ enum class SharedPreferencesKeys(val key: String, val description: String) {
     STEERING_WHEEL_CUSTOM_BUTON_2_ACTION_ORIGINAL("steeringWheelCustomButon2ActionOriginal", "Ação original do botão personalizado 2 do volante"),
     STEERING_WHEEL_OPEN_APP_PACKAGE_BUTTON_1("steeringWheelOpenAppPackageButton1", "Pacote do aplicativo para o botão personalizado 1 do volante"),
     STEERING_WHEEL_OPEN_APP_PACKAGE_BUTTON_2("steeringWheelOpenAppPackageButton2", "Pacote do aplicativo para o botão personalizado 2 do volante"),
+    LAST_CLUSTER_SCREEN("lastClusterScreen", "Última tela exibida no cluster"),
+    LAST_CLUSTER_MENU_ITEM("lastClusterMenuItem", "Último item selecionado no menu principal do cluster")
+
 }

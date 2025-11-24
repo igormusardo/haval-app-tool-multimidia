@@ -312,7 +312,7 @@ fun BasicSettingsTab() {
     var closeSunroofOnPowerOff by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_ON_POWER_OFF.key, false)) }
     var closeSunroofOnFoldMirror by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_ON_FOLD_MIRROR.key, false)) }
     var closeSunroofSunShadeOnCloseSunroof by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_SUN_SHADE_ON_CLOSE_SUNROOF.key, false)) }
-    var enableControlAcViaSteeringWheel by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.key, false)) }
+    var enableCustomMenu by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_CUSTOM_MENU.key, false)) }
     var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, true)) }
     var enableAcMaxSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, false)) }
     var setStartupVolume by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.SET_STARTUP_VOLUME.key, false)) }
@@ -460,12 +460,12 @@ fun BasicSettingsTab() {
                 }
             ),
             SettingItem(
-                title = "Controle do A/C pelo volante",
-                description = SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.description,
-                checked = enableControlAcViaSteeringWheel,
+                title = "Habilitar menu customizado no cluster",
+                description = SharedPreferencesKeys.ENABLE_CUSTOM_MENU.description,
+                checked = enableCustomMenu,
                 onCheckedChange = {
-                    enableControlAcViaSteeringWheel = it
-                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.key, it) }
+                    enableCustomMenu = it
+                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_CUSTOM_MENU.key, it) }
                 }
             ),
             SettingItem(

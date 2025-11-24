@@ -1,6 +1,7 @@
-import { stateManager, subscribe } from '../state.js';
+import { stateManager, subscribe } from '../../state.js';
 import { createFocusElementWithChildren } from './focusElement.js';
-import { div, img, span } from '../utils/createElement.js';
+import { div, img, span } from '../../utils/createElement.js';
+import { updateProgressRings } from './mainAcControl.js'
 
 const ionColor = {
     0: '#60a5fa', // on air
@@ -23,7 +24,7 @@ const getFanIconColor = () => {
 
 export function createFanElement() {
     const speedText = span({
-        className: 'w-54 text-center',
+        className: 'fan-display-label text-center',
         children: [
             stateManager.get('fan'),
         ],
@@ -34,11 +35,8 @@ export function createFanElement() {
     });
     
     var focusArea = createFocusElementWithChildren({
+        className: 'ac-fan-control-area',
         focused: stateManager.get('focusArea') === 'fan',
-        styles: {
-            width: '128px',
-            height: '128px'
-        },
         children: [
             div({
                 className: 'text-white text-center',
@@ -77,6 +75,7 @@ export function createFanElement() {
 
     var unsubscribeFan = subscribe('fan', function(newFanSpeed) {
         speedText.textContent = newFanSpeed;
+        updateProgressRings()
     });
 
     var unsubsscribeAion = subscribe('aion', function() {
@@ -86,7 +85,6 @@ export function createFanElement() {
         icon.src = fanIconSvg(getFanIconColor());
     });
 
-    // Add cleanup method to the element
     focusArea.cleanup = function() {
         unsubscribeFocus();
         unsubscribeFan();

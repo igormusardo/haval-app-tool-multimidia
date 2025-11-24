@@ -61,13 +61,36 @@ StateManager.prototype._notifyListeners = function(key, value) {
 
 // Create the state instance
 var stateManager = new StateManager({
-    focusArea: 'power',
+    // Main Menu state
+    screen: 'main_menu',
+    focusedMenuItem: 'option_4',
+    espStatus: 'ON',
+    drivingMode: 'Normal',
+    steerMode: 'Conforto',
+    evMode: 'HEV',
+
+    // Ac screen states
+    focusArea: 'fan',
     temp: 25,
     fan: 1,
-    power: 0,
-    auto: 0,
+    power: 1,
+    auto: 1,
     recycle: 0,
     aion: 0,
+    outside_temp: '-',
+    inside_temp: '-',
+
+    // Regen screen states
+    regenMode: 'Normal',
+    lastRegenValue: 0,
+    onepedal: false,
+
+    // Graph values
+    currentGraph: 'evConsumption',
+    evConsumption: 0,
+    gasConsumption: 0.0,
+    gasConsumptionMetric: 'Km/l',
+    carSpeed: 0
 });
 
 // Convenience functions for easier usage

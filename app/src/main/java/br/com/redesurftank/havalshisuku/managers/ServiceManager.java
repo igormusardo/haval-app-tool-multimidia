@@ -56,10 +56,13 @@ import br.com.redesurftank.havalshisuku.models.CarConstants;
 import br.com.redesurftank.havalshisuku.models.CarInfo;
 import br.com.redesurftank.havalshisuku.models.ServiceManagerEventType;
 import br.com.redesurftank.havalshisuku.models.SharedPreferencesKeys;
-import br.com.redesurftank.havalshisuku.models.SteeringWheelAcControlType;
 import br.com.redesurftank.havalshisuku.models.SteeringWheelCustomActionType;
+import br.com.redesurftank.havalshisuku.models.MainUiManager;
+import br.com.redesurftank.havalshisuku.models.screens.Screen;
 import br.com.redesurftank.havalshisuku.utils.FridaUtils;
 import br.com.redesurftank.havalshisuku.utils.ShizukuUtils;
+import kotlinx.coroutines.flow.MutableStateFlow;
+import kotlinx.coroutines.flow.StateFlow;
 import rikka.shizuku.Shizuku;
 import rikka.shizuku.ShizukuBinderWrapper;
 
@@ -109,7 +112,15 @@ public class ServiceManager {
             CarConstants.SYS_SETTINGS_DISPLAY_BACKLIGHT_STATE,
             CarConstants.SYS_SETTINGS_DISPLAY_BRIGHTNESS_LEVEL,
             CarConstants.CAR_DRIVE_SETTING_OUTSIDE_VIEW_MIRROR_FOLD_STATE,
-            CarConstants.CAR_BASIC_ENGINE_STATE
+            CarConstants.CAR_BASIC_ENGINE_STATE,
+            CarConstants.CAR_DRIVE_SETTING_ESP_ENABLE,
+            CarConstants.CAR_EV_SETTING_POWER_MODEL_CONFIG,
+            CarConstants.CAR_DRIVE_SETTING_DRIVE_MODE,
+            CarConstants.CAR_DRIVE_SETTING_STEERING_WHEEL_ASSIST_MODE,
+            CarConstants.CAR_EV_SETTING_ENERGY_RECOVERY_LEVEL,
+            CarConstants.CAR_EV_INFO_FUEL_CONSUME_INFO,
+            CarConstants.CAR_EV_INFO_CYCLE_FUEL_CONSUME_INFO,
+            CarConstants.CAR_CONFIGURE_PEDAL_CONTROL_ENABLE,
     };
 
     private static final CarConstants[] KEYS_TO_SAVE = {
@@ -181,6 +192,7 @@ public class ServiceManager {
     private IIntelligentVehicleControlService controlService;
     private IVehicle vehicle;
     private IDvr dvr;
+    private boolean delayNextAVM = false;
     private IVehicleModel vehicleModel;
     private IClusterService clusterService;
     private ServiceConnection clusterServiceConnection;
@@ -190,8 +202,7 @@ public class ServiceManager {
     private boolean isClusterHeartbeatRunning = false;
     private int clusterHeartBeatCount = 0;
     private int clusterCardView = 0;
-    private int steeringWheelAcControlTypeIndex = 0;
-    private SteeringWheelAcControlType steeringWheelAcControlType = SteeringWheelAcControlType.FAN_SPEED;
+
 
     private ServiceManager() {
         dataChangedListeners = new ArrayList<>();
@@ -301,10 +312,7 @@ public class ServiceManager {
                         clusterCardView = whichCard;
                         dispatchServiceManagerEvent(ServiceManagerEventType.CLUSTER_CARD_CHANGED, clusterCardView);
                         if (whichCard == 1) {
-                            var lastAcConfig = sharedPreferences.getString(SharedPreferencesKeys.LAST_CLUSTER_AC_CONFIG.getKey(), SteeringWheelAcControlType.FAN_SPEED.name());
-                            steeringWheelAcControlType = SteeringWheelAcControlType.valueOf(Objects.requireNonNullElse(lastAcConfig, SteeringWheelAcControlType.FAN_SPEED.name()));
-                            steeringWheelAcControlTypeIndex = Arrays.asList(SteeringWheelAcControlType.values()).indexOf(steeringWheelAcControlType);
-                            dispatchServiceManagerEvent(ServiceManagerEventType.STEERING_WHEEL_AC_CONTROL, steeringWheelAcControlType);
+                            MainUiManager.getInstance().updateScreen();
                         }
                         Log.w(TAG, "Cluster card changed: " + whichCard);
                     } else if (msgId == 134) {
@@ -354,6 +362,11 @@ public class ServiceManager {
                     Log.w(TAG, "ClusterService disconnected");
                 }
             };
+
+
+            // Initialize MainUiManager and respective menu management controls
+            MainUiManager.getInstance();
+
             context.bindService(clusterIntent, clusterServiceConnection, Context.BIND_AUTO_CREATE);
             Intent inputIntent = new Intent("com.beantechs.inputservice.service_init");
             inputIntent.setPackage("com.beantechs.inputservice");
@@ -371,87 +384,19 @@ public class ServiceManager {
                                 break;
                         }
                     }
-                    if (sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_CONTROL_VIA_STEERING_WHEEL.getKey(), false)) {
+                    if (sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_CUSTOM_MENU.getKey(), false)) {
                         if (clusterCardView == 1) {
+                            Screen.Key key = null;
                             switch (keyEvent.getKeyCode()) {
-                                case 1028:
-                                    steeringWheelAcControlTypeIndex++;
-                                    steeringWheelAcControlTypeIndex = steeringWheelAcControlTypeIndex % SteeringWheelAcControlType.values().length;
-                                    steeringWheelAcControlType = SteeringWheelAcControlType.values()[steeringWheelAcControlTypeIndex];
-                                    dispatchServiceManagerEvent(ServiceManagerEventType.STEERING_WHEEL_AC_CONTROL, steeringWheelAcControlType);
-                                    sharedPreferences.edit().putString(SharedPreferencesKeys.LAST_CLUSTER_AC_CONFIG.getKey(), steeringWheelAcControlType.name()).apply();
-                                    break;
-                                case 1024:
-                                case 1025: {
-                                    switch (steeringWheelAcControlType) {
-                                        case TEMPERATURE: {
-                                            var currentTemperature = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
-                                            if (currentTemperature != null) {
-                                                float temperature = Float.parseFloat(currentTemperature);
-                                                if (keyEvent.getKeyCode() == 1024) {
-                                                    temperature += 0.5f;
-                                                    if (temperature > 30.0f)
-                                                        temperature = 30.0f;
-                                                } else {
-                                                    temperature -= 0.5f;
-                                                    if (temperature < 16.0f)
-                                                        temperature = 16.0f;
-                                                }
-                                                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), String.valueOf(temperature));
-                                            }
-                                        }
-                                        break;
-                                        case FAN_SPEED: {
-                                            var currentFanSpeed = getUpdatedData(CarConstants.CAR_HVAC_FAN_SPEED.getValue());
-                                            if (currentFanSpeed != null) {
-                                                int speed = Integer.parseInt(currentFanSpeed);
-                                                if (keyEvent.getKeyCode() == 1024) {
-                                                    speed++;
-                                                    if (speed > 7)
-                                                        speed = 7;
-                                                } else {
-                                                    speed--;
-                                                    if (speed < 1)
-                                                        speed = 1;
-                                                }
-                                                updateData(CarConstants.CAR_HVAC_FAN_SPEED.getValue(), String.valueOf(speed));
-                                            }
-                                        }
-                                        break;
-                                        case POWER: {
-                                            var currentPowerMode = getUpdatedData(CarConstants.CAR_HVAC_POWER_MODE.getValue());
-                                            if (currentPowerMode != null) {
-                                                boolean powerMode = currentPowerMode.equals("1");
-                                                powerMode = !powerMode;
-                                                updateData(CarConstants.CAR_HVAC_POWER_MODE.getValue(), powerMode ? "1" : "0");
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                                case 1030: {
-                                    if (clusterCardView == 1) {
-                                        var currentCycleMode = getUpdatedData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue());
-                                        if (currentCycleMode != null) {
-                                            boolean cycleMode = currentCycleMode.equals("1");
-                                            cycleMode = !cycleMode;
-                                            updateData(CarConstants.CAR_HVAC_CYCLE_MODE.getValue(), cycleMode ? "1" : "0");
-                                        }
-                                    }
-                                }
-                                break;
-                                case 1039: {
-                                    if (clusterCardView == 1) {
-                                        var currentAcAutoMode = getUpdatedData(CarConstants.CAR_HVAC_AUTO_ENABLE.getValue());
-                                        if (currentAcAutoMode != null) {
-                                            boolean acAutoMode = currentAcAutoMode.equals("1");
-                                            acAutoMode = !acAutoMode;
-                                            updateData(CarConstants.CAR_HVAC_AUTO_ENABLE.getValue(), acAutoMode ? "1" : "0");
-                                        }
-                                    }
-                                }
-                                break;
+                                case 1024: key = Screen.Key.UP; break;
+                                case 1025: key = Screen.Key.DOWN; break;
+                                case 1028: key = Screen.Key.ENTER; break;
+                                case 1029: key = Screen.Key.HOME; break;
+                                case 1030: key = Screen.Key.BACK; break;
+                                case 1037: key = Screen.Key.ENTER_LONG; break;
+                                case 1039: key = Screen.Key.BACK_LONG; break;
                             }
+                            if (key != null) MainUiManager.getInstance().handleGeneralKeyEvents(key);
                         }
                     }
                 }
@@ -588,6 +533,10 @@ public class ServiceManager {
                 }
                 pendingTasks.clear();
             }
+
+            MainUiManager.getInstance().updateScreen();
+
+
             timeInitialized = SystemClock.uptimeMillis();
             Log.w(TAG, "Services initialized successfully");
             ProjectorManager.getInstance().initialize();
@@ -694,6 +643,27 @@ public class ServiceManager {
                     } else {
                         Log.e(TAG, "App not found: " + packageName);
                     }
+                }
+                break;
+            case TOGGLE_CAMERA_AVM:
+                boolean cameraAVM = sharedPreferences.getBoolean(SharedPreferencesKeys.DISABLE_AVM_CAR_STOPPED.getKey(), false);
+                cameraAVM = !cameraAVM;
+                sharedPreferences.edit().putBoolean(SharedPreferencesKeys.DISABLE_AVM_CAR_STOPPED.getKey(), cameraAVM).apply();
+                Log.w(TAG, "Camera AVM state changed to: " + cameraAVM);
+                break;
+            case OPEN_AVM_ONCE:
+                try {
+                    if (getData(CarConstants.SYS_AVM_PREVIEW_STATUS.getValue()).equals("0")) {
+                        delayNextAVM = true;
+                        dvr.setAVM(1);
+                        Log.w(TAG, "Camera AVM temporarily triggered");
+                    } else {
+                        delayNextAVM = false;
+                        dvr.setAVM(0);
+                        Log.w(TAG, "Camera AVM closed");
+                    }
+                } catch (RemoteException e) {
+                    Log.w(TAG, "Error to launch AVM camera");
                 }
                 break;
         }
@@ -864,7 +834,7 @@ public class ServiceManager {
         }
     }
 
-    private void dispatchServiceManagerEvent(ServiceManagerEventType event, Object... args) {
+    public void dispatchServiceManagerEvent(ServiceManagerEventType event, Object... args) {
         Log.w(TAG, "Dispatching service manager event: " + event);
         for (IServiceManagerEvent listener : new ArrayList<>(serviceManagerEventListeners)) {
             try {
@@ -1001,10 +971,14 @@ public class ServiceManager {
                     closeSunroofDueToeSpeed = false;
                 }
                 if (currentSpeed <= 0 & sharedPreferences.getBoolean(SharedPreferencesKeys.DISABLE_AVM_CAR_STOPPED.getKey(), false) && !getData(CarConstants.CAR_BASIC_GEAR_STATUS.getValue()).equals("4")) {
-                    dvr.setAVM(0);
+                    if (value.equals("1") && !delayNextAVM) dvr.setAVM(0);
                 }
-            } else if (key.equals(CarConstants.SYS_AVM_PREVIEW_STATUS.getValue()) && sharedPreferences.getBoolean(SharedPreferencesKeys.DISABLE_AVM_CAR_STOPPED.getKey(), false) && value.equals("1") && Float.parseFloat(getData(CarConstants.CAR_BASIC_VEHICLE_SPEED.getValue())) <= 0f && !getData(CarConstants.CAR_BASIC_GEAR_STATUS.getValue()).equals("4")) {
-                dvr.setAVM(0);
+            } else if (key.equals(CarConstants.SYS_AVM_PREVIEW_STATUS.getValue()) && sharedPreferences.getBoolean(SharedPreferencesKeys.DISABLE_AVM_CAR_STOPPED.getKey(), false) && Float.parseFloat(getData(CarConstants.CAR_BASIC_VEHICLE_SPEED.getValue())) <= 0f && !getData(CarConstants.CAR_BASIC_GEAR_STATUS.getValue()).equals("4")) {
+                if (value.equals("1")) {
+                    if (!delayNextAVM) dvr.setAVM(0);
+                } else {
+                    delayNextAVM = false;
+                }
             } else if (key.equals(CarConstants.CAR_BASIC_DRIVING_READY_STATE.getValue())) {
                 if ((value.equals("-1") || value.equals("0"))) {
                     boolean disableBluetoothOnPowerOff = sharedPreferences.getBoolean(SharedPreferencesKeys.DISABLE_BLUETOOTH_ON_POWER_OFF.getKey(), false);
@@ -1471,5 +1445,9 @@ public class ServiceManager {
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             Log.w(TAG, Log.getStackTraceString(e));
         }
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return sharedPreferences;
     }
 }

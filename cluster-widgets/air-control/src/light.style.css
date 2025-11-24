@@ -3,7 +3,7 @@
     color: #000000;
 }
 
-.circle-container {
+.ac-circle-container {
     background: linear-gradient(180deg, #B3BED2 0%, #D0D6DD 100%);
     background: -webkit-linear-gradient(180deg, #B3BED2 0%, #D0D6DD 100%);
     background: -moz-linear-gradient(180deg, #B3BED2 0%, #D0D6DD 100%);

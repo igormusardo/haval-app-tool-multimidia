@@ -1,4 +1,4 @@
-import { div as createDiv } from '../utils/createElement.js';
+import { div as createDiv } from '../../utils/createElement.js';
 
 export function createFocusElementWithChildren(props) {
     props = props || {};
@@ -6,7 +6,7 @@ export function createFocusElementWithChildren(props) {
     var className = props.className || '';
     var children = props.children || [];
     var customStyles = props.styles || {};
-    
+
     var div = createDiv({
         className: 'focus-area',
         children: children,

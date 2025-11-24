@@ -1,52 +1,74 @@
-import { createPowerElement } from './components/power.js';
-import { createControlElement } from './components/control.js';
-import { createStatusElement } from './components/status.js';
-import { setState } from './state.js';
+import {getState as get, setState, subscribe} from './state.js';
+import {createMainMenu} from './components/mainMenu.js';
+import {createAcControlScreen, updateProgressRings as updateProgressRingsAC} from "./components/aircon/mainAcControl.js";
+import {createRegenScreen, updateProgressRings as updateProgressRingsRegen } from "./components/regen/regenControl.js";
+import {createGraphScreen } from "./components/graphs/graphs.js";
+import { div } from './utils/createElement.js';
 
-// Create the main container
-var main = document.createElement('main');
-main.className = 'main-container';
+if (process.env.NODE_ENV === 'development') {
+    import('./testing-utils.js');
+}
 
-// Create the circular container
-var circleContainer = document.createElement('div');
-circleContainer.className = 'circle-container';
+const appContainer = document.getElementById('app');
+let currentComponent = null;
 
-// Create power element
-var powerElement = createPowerElement();
+function render() {
+    const screen = get('screen');
 
-// Create control element
-var controlElement = createControlElement();
+    if (currentComponent && currentComponent.cleanup) {
+        currentComponent.cleanup();
+    }
 
-// Create status element
-var statusElement = createStatusElement();
+    if (appContainer && appContainer.innerHTML) {
+        appContainer.innerHTML = '';
+    }
 
-// Assemble the DOM structure
-circleContainer.appendChild(powerElement);
-circleContainer.appendChild(controlElement);
-circleContainer.appendChild(statusElement)
-main.appendChild(circleContainer);
+    if (screen === 'main_menu') {
+        currentComponent = createMainMenu();
+    } else if (screen === 'aircon') {
+        currentComponent = createAcControlScreen();
+    } else if (screen === 'regen') {
+        currentComponent = createRegenScreen();
+    } else if (screen === 'graph') {
+        currentComponent = createGraphScreen();
+    }
 
-// Add to the document
-document.getElementById('app').appendChild(main);
+    if (currentComponent) {
+        const element = currentComponent.element || currentComponent;
+        const onMount = currentComponent.onMount;
+        currentComponent = element;
+        appContainer.appendChild(element);
+        if (onMount) {
+            onMount();
+        }
+    }
+}
 
-// Global control functions
-window.control = function(area, value) {
-    setState(area, value);
+// Start rendering and subscribe to listen for screen changes thus triggering new render
+subscribe('screen', render);
+render();
+
+
+// Functions used by Kotlin to trigger interactions
+window.showScreen = function(screenName) {
+    setState('screen', screenName);
 };
 
-window.focus = function(area) {
-    setState('focusArea', area);
+window.focus = function(item) {
+    const screen = get('screen');
+    if (screen === 'main_menu') {
+        setState('focusedMenuItem', item);
+    } else if (screen === 'aircon') {
+        setState('focusArea', item);
+    }
 };
 
-// Cleanup function for when the app is destroyed
+window.control = function(key, value) {
+    setState(key, value);
+};
+
 window.cleanup = function() {
-    if (powerElement.cleanup) {
-        powerElement.cleanup();
-    }
-    if (controlElement.cleanup) {
-        controlElement.cleanup();
-    }
-    if (main.parentNode) {
-        main.parentNode.removeChild(main);
+    if (currentComponent && currentComponent.cleanup) {
+        currentComponent.cleanup();
     }
 };
