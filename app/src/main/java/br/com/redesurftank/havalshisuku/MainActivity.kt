@@ -479,6 +479,16 @@ fun BasicSettingsTab() {
                 }
             ),
             SettingItem(
+                title = "Controle de aquecimento do A/C",
+                description = SharedPreferencesKeys.ENABLE_HEATING_SWITCH.description,
+                checked = enableHeatingSwitch,
+                onCheckedChange = {
+                    enableHeatingSwitch = it
+                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.key, it) }
+                    ServiceManager.getInstance().setHeatingSwitchEnabled(it)
+                }
+            ),
+            SettingItem(
                 title = "Potência máxima do A/C",
                 description = SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.description,
                 checked = enableAcMaxSwitch,

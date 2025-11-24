@@ -517,6 +517,11 @@ public class ServiceManager {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
             }
+            boolean isForceDisableHeatingSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.getKey(), false);
+            if (isForceDisableHeatingSwitch) {
+                setHeatingSwitchEnabled(false);
+                Log.w(TAG, "Heating switch disabled by user preference");
+            }
 
             boolean isForceEnableAcMaxSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.getKey(), true);
             if (isForceEnableAcMaxSwitch) {
@@ -1007,8 +1012,10 @@ public class ServiceManager {
                 updateData(CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), value);
             } else if (key.equals(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue())) {
                 updateData(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue(), value);
+            } else if (key.equals(CarConstants.CAR_HVAC_HEATING_ENABLE.getValue()) && value.equals("1")) {
+                updateData(CarConstants.CAR_HVAC_HEATING_ENABLE.getValue(), value);
             }
-        } catch (Exception e) {
+    } catch (Exception e) {
             Log.e(TAG, "Error in OnDataChanged", e);
         }
     }
@@ -1096,6 +1103,20 @@ public class ServiceManager {
             Log.w(TAG, "Intelligent AC switch enabled: " + b);
         } catch (RemoteException e) {
             Log.e(TAG, "Error setting Intelligent AC switch", e);
+        }
+    }
+
+
+    public void setHeatingSwitchEnabled(boolean b) {
+        if (controlService == null) {
+            Log.e(TAG, "ControlService not initialized");
+            return;
+        }
+        try {
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_HEATING_ENABLE.getValue(), b ? "1" : "0");
+            Log.w(TAG, "Heating switch enabled: " + b);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error setting Heating switch", e);
         }
     }
 
