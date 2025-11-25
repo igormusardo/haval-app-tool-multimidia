@@ -28,7 +28,7 @@ enum class SharedPreferencesKeys(val key: String, val description: String) {
     ENABLE_INSTRUMENT_CUSTOM_MEDIA_INTEGRATION("enableInstrumentCustomMediaIntegration", "Habilitar integração personalizada de mídia no painel de instrumentos"),
     ENABLE_CUSTOM_MENU("enableCustomMenu", "Exibe um menu customizado no cluster controlado pelas teclas do volante"),
     ENABLE_AC_INTELLIGENT_SWITCH("enableAcIntelligentSwitch", "Habilitar controle inteligente de ar-condicionado"),
-    ENABLE_HEATING_SWITCH("enableHeatingSwitch", "Habilitar controle de aquecimento do ar-condicionado"),
+    ENABLE_FRONT_DEFROST("enableFrontDefrost", "Compressor do A/C sempre ligado"),
     ENABLE_AC_MAX_SWITCH("enableAcMaxSwitch", "Habilitar potência máxima do ar-condicionado"),
     INSTRUMENT_REVISION_KM("instrumentRevisionKm", "Quilometragem para aviso de revisão no painel de instrumentos"),
     INSTRUMENT_REVISION_NEXT_DATE("instrumentRevisionNextDate", "Data da próxima revisão no painel de instrumentos"),

@@ -314,8 +314,7 @@ fun BasicSettingsTab() {
     var closeSunroofSunShadeOnCloseSunroof by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_SUNROOF_SUN_SHADE_ON_CLOSE_SUNROOF.key, false)) }
     var enableCustomMenu by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_CUSTOM_MENU.key, false)) }
     var enableIntelligentSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.key, true)) }
-    var enableHeatingSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.key, false)) }
-    var enableAcMaxSwitch by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, false)) }
+    var enableFrontDefrost by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.key, false)) }
     var setStartupVolume by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.SET_STARTUP_VOLUME.key, false)) }
     var volume by remember { mutableIntStateOf(prefs.getInt(SharedPreferencesKeys.STARTUP_VOLUME.key, 1)) }
     var closeWindowsOnSpeed by remember { mutableStateOf(prefs.getBoolean(SharedPreferencesKeys.CLOSE_WINDOWS_ON_SPEED.key, false)) }
@@ -480,23 +479,13 @@ fun BasicSettingsTab() {
                 }
             ),
             SettingItem(
-                title = "Controle de aquecimento do A/C",
-                description = SharedPreferencesKeys.ENABLE_HEATING_SWITCH.description,
-                checked = enableHeatingSwitch,
+                title = "Compressor do A/C sempre ligado",
+                description = SharedPreferencesKeys.ENABLE_FRONT_DEFROST.description,
+                checked = enableFrontDefrost,
                 onCheckedChange = {
-                    enableHeatingSwitch = it
-                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.key, it) }
-                    ServiceManager.getInstance().setHeatingSwitchEnabled(it)
-                }
-            ),
-            SettingItem(
-                title = "Potência máxima do A/C",
-                description = SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.description,
-                checked = enableAcMaxSwitch,
-                onCheckedChange = {
-                    enableAcMaxSwitch = it
-                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.key, it) }
-                    ServiceManager.getInstance().setAcMaxSwitchEnabled(it)
+                    enableFrontDefrost = it
+                    prefs.edit { putBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.key, it) }
+                    ServiceManager.getInstance().setFrontDefrostEnabled(it)
                 }
             ),
             SettingItem(

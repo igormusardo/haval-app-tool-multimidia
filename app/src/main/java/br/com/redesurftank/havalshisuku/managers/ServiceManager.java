@@ -517,16 +517,10 @@ public class ServiceManager {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
             }
-            boolean isForceDisableHeatingSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_HEATING_SWITCH.getKey(), false);
-            if (isForceDisableHeatingSwitch) {
-                setHeatingSwitchEnabled(false);
-                Log.w(TAG, "Heating switch disabled by user preference");
-            }
-
-            boolean isForceEnableAcMaxSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_MAX_SWITCH.getKey(), true);
-            if (isForceEnableAcMaxSwitch) {
-                setAcMaxSwitchEnabled(false);
-                Log.w(TAG, "AC Max switch enabled by user preference");
+            boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), true);
+            if (isForceEnableFrontDefrost) {
+                setFrontDefrostEnabled(true);
+                Log.w(TAG, "Front defrost enabled by user preference");
             }
 
             ensureSteeringWheelButtonIntegration();
@@ -1107,30 +1101,16 @@ public class ServiceManager {
     }
 
 
-    public void setHeatingSwitchEnabled(boolean b) {
+    public void setFrontDefrostEnabled(boolean b) {
         if (controlService == null) {
             Log.e(TAG, "ControlService not initialized");
             return;
         }
         try {
-            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_HEATING_ENABLE.getValue(), b ? "1" : "0");
-            Log.w(TAG, "Heating switch enabled: " + b);
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_FRONT_DEFROST_ENABLE.getValue(), b ? "1" : "0");
+            Log.w(TAG, "Front defrost enabled: " + b);
         } catch (RemoteException e) {
-            Log.e(TAG, "Error setting Heating switch", e);
-        }
-    }
-
-
-    public void setAcMaxSwitchEnabled(boolean b) {
-        if (controlService == null) {
-            Log.e(TAG, "ControlService not initialized");
-            return;
-        }
-        try {
-            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), b ? "1" : "0");
-            Log.w(TAG, "AC Max switch enabled: " + b);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Error setting AC Max switch", e);
+            Log.e(TAG, "Error setting Front defrost", e);
         }
     }
 
