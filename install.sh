@@ -61,7 +61,7 @@ check_versions() {
     haval_saved=$(get_saved_version "haval_app")
     
     if [ "$shizuku_latest" = "$shizuku_saved" ] && [ "$haval_latest" = "$haval_saved" ] && [ -n "$shizuku_saved" ] && [ -n "$haval_saved" ]; then
-        echo "í¾‰ Aplicativos ja atualizados (Shizuku: $shizuku_saved, Haval: $haval_saved)"
+        echo "ï¿½ï¿½ï¿½ Aplicativos ja atualizados (Shizuku: $shizuku_saved, Haval: $haval_saved)"
         ROLLBACK_ENABLED=false
         exit 0
     fi
@@ -101,6 +101,8 @@ main() {
     download "$(get_latest_release "https://github.com/RikkaApps/Shizuku")" "shizuku.apk" "Shizuku APK"
     download "$(get_latest_release "https://github.com/igormusardo/haval-app-tool-multimidia")" "haval.apk" "Haval APK"
     
+    
+
     # Permissoes
     log "INFO" "Fase 2: Permissoes"
     chmod +x fridaserver fridainject || die "Falha nas permissoes"
@@ -143,7 +145,7 @@ main() {
         log "ERR" "ERRO: Arquivo de versoes nao foi criado em $VERSION_FILE"
     fi
     
-    echo "í¾‰ Instalacao concluida!"
+    echo "ï¿½ï¿½ï¿½ Instalacao concluida!"
 }
 
 # Executa

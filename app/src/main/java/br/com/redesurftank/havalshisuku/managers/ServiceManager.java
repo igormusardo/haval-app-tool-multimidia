@@ -198,6 +198,7 @@ public class ServiceManager {
     private IClusterService clusterService;
     private ServiceConnection clusterServiceConnection;
     private IInputService inputService;
+    private Runnable defrostCompressorTask;
     private ServiceConnection inputServiceConnection;
     private IConnectivityManager connectivityManager;
     private boolean isClusterHeartbeatRunning = false;
@@ -1109,6 +1110,47 @@ public class ServiceManager {
         try {
             controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_FRONT_DEFROST_ENABLE.getValue(), b ? "1" : "0");
             Log.w(TAG, "Front defrost enabled: " + b);
+            
+            // Cancel existing task if disabling defrost
+            if (!b && defrostCompressorTask != null) {
+                backgroundHandler.removeCallbacks(defrostCompressorTask);
+                defrostCompressorTask = null;
+                Log.w(TAG, "Defrost compressor task cancelled");
+                return;
+            }
+            
+            // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
+            if (b) {
+                defrostCompressorTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        String blowerMode = getUpdatedData(CarConstants.CAR_HVAC_BLOWER_MODE.getValue());
+                        if (blowerMode != null && !blowerMode.equals("4")) {
+                            String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                            if (currentTemp != null) {
+                                final String savedTemperature = currentTemp;
+                                // Set temperature to 16 to force compressor on
+                                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), "16");
+                                Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 20 seconds");
+                                
+                                // Restore temperature after 20 seconds
+                                backgroundHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
+                                        Log.w(TAG, "Temperature restored to " + savedTemperature);
+                                    }
+                                }, 20000);
+                            }
+                        }
+                        // Schedule next execution in 2 minutes (120000 ms)
+                        backgroundHandler.postDelayed(this, 120000);
+                    }
+                };
+                // Start the task immediately
+                backgroundHandler.post(defrostCompressorTask);
+                Log.w(TAG, "Defrost compressor task started, will run every 2 minutes");
+            }
         } catch (RemoteException e) {
             Log.e(TAG, "Error setting Front defrost", e);
         }
