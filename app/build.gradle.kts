@@ -1,17 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
-import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-}
-
-val keystoreProperties = Properties()
-val keystorePropertiesFile = rootProject.file("key.properties")
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -28,28 +20,17 @@ android {
     }
 
     signingConfigs {
-        val keystoreFile = keystoreProperties.getProperty("storeFile")?.let { 
-            rootProject.file(it) 
-        } ?: file("release.keystore")
-        
-        if (keystoreFile.exists()) {
-            create("release") {
-                keyAlias = keystoreProperties.getProperty("keyAlias") ?: ""
-                keyPassword = keystoreProperties.getProperty("keyPassword") ?: ""
-                storeFile = keystoreFile
-                storePassword = keystoreProperties.getProperty("storePassword") ?: ""
-            }
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
         }
     }
 
     buildTypes {
         named("release") {
-            if (signingConfigs.findByName("release") != null) {
-                signingConfig = signingConfigs.getByName("release")
-            } else {
-                // Use debug signing if no release keystore is available
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources  = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
