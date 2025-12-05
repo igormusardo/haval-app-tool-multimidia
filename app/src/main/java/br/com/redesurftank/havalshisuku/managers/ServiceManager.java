@@ -518,7 +518,7 @@ public class ServiceManager {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
             }
-            boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), true);
+            boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), false);
             setFrontDefrostEnabled(isForceEnableFrontDefrost);
 
             ensureSteeringWheelButtonIntegration();
