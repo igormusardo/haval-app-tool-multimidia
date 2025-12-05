@@ -513,7 +513,7 @@ public class ServiceManager {
             if (sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_SEAT_VENTILATION_ON_AC_ON.getKey(), false) && getUpdatedData(CarConstants.CAR_HVAC_POWER_MODE.getValue()).equals("1")) {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "3");
             }
-            boolean isForceDisableIntelligentAcSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.getKey(), false);
+            boolean isForceDisableIntelligentAcSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.getKey(), true);
             if (isForceDisableIntelligentAcSwitch) {
                 setIntelligentAcSwitchEnabled(false);
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
