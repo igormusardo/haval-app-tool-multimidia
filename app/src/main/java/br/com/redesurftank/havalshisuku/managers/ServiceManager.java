@@ -519,10 +519,7 @@ public class ServiceManager {
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
             }
             boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), true);
-            if (isForceEnableFrontDefrost) {
-                setFrontDefrostEnabled(true);
-                Log.w(TAG, "Front defrost enabled by user preference");
-            }
+            setFrontDefrostEnabled(isForceEnableFrontDefrost);
 
             ensureSteeringWheelButtonIntegration();
             ensureSystemApps();
@@ -1120,7 +1117,7 @@ public class ServiceManager {
             }
             
             // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
-            if (b) {
+            if (b && defrostCompressorTask == null) {
                 defrostCompressorTask = new Runnable() {
                     @Override
                     public void run() {
