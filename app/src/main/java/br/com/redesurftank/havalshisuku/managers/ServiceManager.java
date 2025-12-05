@@ -1146,7 +1146,7 @@ public class ServiceManager {
                                             Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
                                         }
                                     }
-                                }, 20000);
+                                }, 10000);
                             }
                         }
                         // Schedule next execution in 2 minutes (120000 ms)
