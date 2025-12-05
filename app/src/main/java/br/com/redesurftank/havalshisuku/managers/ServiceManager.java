@@ -1108,7 +1108,7 @@ public class ServiceManager {
             return;
         }
         try {
-            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_FRONT_DEFROST_ENABLE.getValue(), b ? "1" : "0");
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), b ? "1" : "0");
             Log.w(TAG, "Front defrost enabled: " + b);
             
             // Cancel existing task if disabling defrost
@@ -1133,12 +1133,18 @@ public class ServiceManager {
                                 updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), "16");
                                 Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 20 seconds");
                                 
-                                // Restore temperature after 20 seconds
+                                // Restore temperature after 20 seconds, but only if user hasn't changed it
                                 backgroundHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
-                                        Log.w(TAG, "Temperature restored to " + savedTemperature);
+                                        String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                                        // Only restore if temperature is still 16 (user hasn't changed it)
+                                        if (currentTemp != null && currentTemp.equals("16")) {
+                                            updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
+                                            Log.w(TAG, "Temperature restored to " + savedTemperature);
+                                        } else {
+                                            Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
+                                        }
                                     }
                                 }, 20000);
                             }
