@@ -27,6 +27,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Change DNS to Cloudflare
+        run: /usr/bin/echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
 

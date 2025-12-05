@@ -93,13 +93,19 @@ public class ServiceManager {
             CarConstants.CAR_HVAC_ANION_ENABLE,
             CarConstants.CAR_HVAC_BLOWER_MODE,
             CarConstants.CAR_HVAC_CYCLE_MODE,
+            CarConstants.CAR_HVAC_ACMAX_ENABLE,
+            CarConstants.CAR_HVAC_HEATING_ENABLE,
+            CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE,
+            CarConstants.CAR_HVAC_INTELLIGENT_TEMPERATURE_RANGE,
             CarConstants.CAR_HVAC_DRIVER_TEMPERATURE,
             CarConstants.CAR_HVAC_FAN_SPEED,
             CarConstants.CAR_HVAC_FRONT_DEFROST_ENABLE,
+            CarConstants.CAR_HVAC_SETTING_AUTO_DEFROST_ENABLE,
             CarConstants.CAR_HVAC_PASS_TEMPERATURE,
             CarConstants.CAR_HVAC_POWER_MODE,
             CarConstants.CAR_HVAC_SYNC_ENABLE,
             CarConstants.CAR_HVAC_AUTO_ENABLE,
+            CarConstants.CAR_HVAC_SETTING_LIMIT_ENABLE,
             CarConstants.CAR_IPK_SETTING_BRIGHTNESS_CONFIG,
             CarConstants.SYS_AVM_AUTO_PREVIEW_ENABLE,
             CarConstants.SYS_AVM_PREVIEW_STATUS,
@@ -192,6 +198,7 @@ public class ServiceManager {
     private IClusterService clusterService;
     private ServiceConnection clusterServiceConnection;
     private IInputService inputService;
+    private Runnable defrostCompressorTask;
     private ServiceConnection inputServiceConnection;
     private IConnectivityManager connectivityManager;
     private boolean isClusterHeartbeatRunning = false;
@@ -506,6 +513,14 @@ public class ServiceManager {
             if (sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_SEAT_VENTILATION_ON_AC_ON.getKey(), false) && getUpdatedData(CarConstants.CAR_HVAC_POWER_MODE.getValue()).equals("1")) {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "3");
             }
+            boolean isForceDisableIntelligentAcSwitch = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_AC_INTELLIGENT_SWITCH.getKey(), true);
+            if (isForceDisableIntelligentAcSwitch) {
+                setIntelligentAcSwitchEnabled(false);
+                Log.w(TAG, "Intelligent AC switch disabled by user preference");
+            }
+            boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), false);
+            setFrontDefrostEnabled(isForceEnableFrontDefrost);
+
             ensureSteeringWheelButtonIntegration();
             ensureSystemApps();
 
@@ -985,8 +1000,14 @@ public class ServiceManager {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "3");
             } else if (key.equals(CarConstants.CAR_HVAC_POWER_MODE.getValue()) && value.equals("0") && sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_SEAT_VENTILATION_ON_AC_ON.getKey(), false)) {
                 updateData(CarConstants.CAR_COMFORT_SETTING_DRIVER_SEAT_VENTILATION_LEVEL.getValue(), "0");
+            } else if (key.equals(CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue())) {
+                updateData(CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), value);
+            } else if (key.equals(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue())) {
+                updateData(CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue(), value);
+            } else if (key.equals(CarConstants.CAR_HVAC_HEATING_ENABLE.getValue()) && value.equals("1")) {
+                updateData(CarConstants.CAR_HVAC_HEATING_ENABLE.getValue(), value);
             }
-        } catch (Exception e) {
+    } catch (Exception e) {
             Log.e(TAG, "Error in OnDataChanged", e);
         }
     }
@@ -1060,6 +1081,81 @@ public class ServiceManager {
             Log.w(TAG, "AVAS enabled: " + b);
         } catch (RemoteException e) {
             Log.e(TAG, "Error setting AVAS", e);
+        }
+    }
+
+
+    public void setIntelligentAcSwitchEnabled(boolean b) {
+        if (controlService == null) {
+            Log.e(TAG, "ControlService not initialized");
+            return;
+        }
+        try {
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_INTELLIGENT_SWITCH_ENABLE.getValue(), b ? "1" : "0");
+            Log.w(TAG, "Intelligent AC switch enabled: " + b);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error setting Intelligent AC switch", e);
+        }
+    }
+
+
+    public void setFrontDefrostEnabled(boolean b) {
+        if (controlService == null) {
+            Log.e(TAG, "ControlService not initialized");
+            return;
+        }
+        try {
+            controlService.request("cmd.common.request.set", CarConstants.CAR_HVAC_ACMAX_ENABLE.getValue(), b ? "1" : "0");
+            Log.w(TAG, "Front defrost enabled: " + b);
+            
+            // Cancel existing task if disabling defrost
+            if (!b && defrostCompressorTask != null) {
+                backgroundHandler.removeCallbacks(defrostCompressorTask);
+                defrostCompressorTask = null;
+                Log.w(TAG, "Defrost compressor task cancelled");
+                return;
+            }
+            
+            // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
+            if (b && defrostCompressorTask == null) {
+                defrostCompressorTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        String blowerMode = getUpdatedData(CarConstants.CAR_HVAC_BLOWER_MODE.getValue());
+                        if (blowerMode != null && !blowerMode.equals("4")) {
+                            String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                            if (currentTemp != null) {
+                                final String savedTemperature = currentTemp;
+                                // Set temperature to 16 to force compressor on
+                                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), "16");
+                                Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 20 seconds");
+                                
+                                // Restore temperature after 20 seconds, but only if user hasn't changed it
+                                backgroundHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                                        // Only restore if temperature is still 16 (user hasn't changed it)
+                                        if (currentTemp != null && currentTemp.startsWith("16")) {
+                                            updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
+                                            Log.w(TAG, "Temperature restored to " + savedTemperature);
+                                        } else {
+                                            Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
+                                        }
+                                    }
+                                }, 10000);
+                            }
+                        }
+                        // Schedule next execution in 2 minutes (120000 ms)
+                        backgroundHandler.postDelayed(this, 120000);
+                    }
+                };
+                // Start the task immediately
+                backgroundHandler.post(defrostCompressorTask);
+                Log.w(TAG, "Defrost compressor task started, will run every 2 minutes");
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error setting Front defrost", e);
         }
     }
 
