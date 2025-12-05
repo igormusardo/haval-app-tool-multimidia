@@ -1139,7 +1139,7 @@ public class ServiceManager {
                                     public void run() {
                                         String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                                         // Only restore if temperature is still 16 (user hasn't changed it)
-                                        if (currentTemp != null && currentTemp.equals("16")) {
+                                        if (currentTemp != null && currentTemp.startsWith("16")) {
                                             updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
                                             Log.w(TAG, "Temperature restored to " + savedTemperature);
                                         } else {
