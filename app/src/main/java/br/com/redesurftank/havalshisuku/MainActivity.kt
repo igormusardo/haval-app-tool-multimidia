@@ -1895,67 +1895,35 @@ fun InformacoesTab() {
         }
     }
 
-    suspend fun getLatestReleaseInfo(isPreview: Boolean): Pair<String?, String?> {
+    suspend fun getLatestReleaseInfo(): Pair<String?, String?> {
         return withContext(Dispatchers.IO) {
             try {
-                val endpoint = if (isPreview)
-                    "https://api.github.com/repos/igormusardo/haval-app-tool-multimidia/releases"
-                else
-                    "https://api.github.com/repos/igormusardo/haval-app-tool-multimidia/releases/latest"
-
-                val url = URL(endpoint)
+                val url = URL("https://api.github.com/repos/bobaoapae/haval-app-tool-multimidia/releases/latest")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.setRequestProperty("Accept", "application/vnd.github.v3+json")
-
-                if (conn.responseCode != 200) return@withContext null to null
-
-                val reader = BufferedReader(InputStreamReader(conn.inputStream))
-                val response = reader.use { it.readText() }
-
-                if (!isPreview) {
+                if (conn.responseCode == 200) {
+                    val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                    val response = reader.use { it.readText() }
                     val json = JSONObject(response)
                     val tag = json.getString("tag_name")
                     val assets = json.getJSONArray("assets")
                     var dlUrl: String? = null
                     for (i in 0 until assets.length()) {
-                        val a = assets.getJSONObject(i)
-                        if (a.getString("name").endsWith(".apk")) {
-                            dlUrl = a.getString("browser_download_url")
+                        val asset = assets.getJSONObject(i)
+                        if (asset.getString("name").endsWith(".apk")) {
+                            dlUrl = asset.getString("browser_download_url")
                             break
                         }
                     }
-                    return@withContext tag to dlUrl
-                }
-
-                val releases = JSONArray(response)
-                var tag: String? = null
-                var dlUrl: String? = null
-
-                for (i in 0 until releases.length()) {
-                    val rel = releases.getJSONObject(i)
-                    if (rel.getBoolean("prerelease")) {
-                        tag = rel.getString("tag_name")
-                        val assets = rel.getJSONArray("assets")
-                        for (j in 0 until assets.length()) {
-                            val a = assets.getJSONObject(j)
-                            if (a.getString("name").endsWith(".apk")) {
-                                dlUrl = a.getString("browser_download_url")
-                                break
-                            }
-                        }
-                        break
-                    }
-                }
-
-                tag to dlUrl
+                    tag to dlUrl
+                } else null to null
             } catch (e: Exception) {
                 Log.w(TAG, "Error fetching latest release info", e)
                 null to null
             }
         }
     }
-
 
     fun compareVersions(v1: String, v2: String): Int {
         val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
@@ -2118,7 +2086,7 @@ fun InformacoesTab() {
                     Button(
                         onClick = {
                             scope.launch {
-                                val (latest, dlUrl) = getLatestReleaseInfo(isPreviewVersion)
+                                val (latest, dlUrl) = getLatestReleaseInfo()
                                 if (latest != null && dlUrl != null) {
                                     val currentClean = version.removePrefix("v")
                                     val latestClean = latest.removePrefix("v")
