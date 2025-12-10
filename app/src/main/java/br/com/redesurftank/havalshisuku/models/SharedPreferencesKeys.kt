@@ -52,6 +52,7 @@ enum class SharedPreferencesKeys(val key: String, val description: String) {
     STEERING_WHEEL_OPEN_APP_PACKAGE_BUTTON_1("steeringWheelOpenAppPackageButton1", "Pacote do aplicativo para o botão personalizado 1 do volante"),
     STEERING_WHEEL_OPEN_APP_PACKAGE_BUTTON_2("steeringWheelOpenAppPackageButton2", "Pacote do aplicativo para o botão personalizado 2 do volante"),
     LAST_CLUSTER_SCREEN("lastClusterScreen", "Última tela exibida no cluster"),
-    LAST_CLUSTER_MENU_ITEM("lastClusterMenuItem", "Último item selecionado no menu principal do cluster")
+    LAST_CLUSTER_MENU_ITEM("lastClusterMenuItem", "Último item selecionado no menu principal do cluster"),
+    SAVED_DEFROST_TEMPERATURE("savedDefrostTemperature", "Temperatura salva antes de forçar compressor")
 
 }

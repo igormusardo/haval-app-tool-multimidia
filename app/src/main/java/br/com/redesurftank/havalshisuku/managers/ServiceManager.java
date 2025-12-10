@@ -1112,8 +1112,21 @@ public class ServiceManager {
             if (!b && defrostCompressorTask != null) {
                 backgroundHandler.removeCallbacks(defrostCompressorTask);
                 defrostCompressorTask = null;
-                Log.w(TAG, "Defrost compressor task cancelled");
+                // Clear saved temperature when disabling defrost
+                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
+                Log.w(TAG, "Defrost compressor task cancelled and saved temperature cleared");
                 return;
+            }
+            
+            // If enabling defrost, check if there's a saved temperature from previous session
+            if (b) {
+                String savedTemp = sharedPreferences.getString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), null);
+                if (savedTemp != null) {
+                    // Restore the saved temperature
+                    updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemp);
+                    sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
+                    Log.w(TAG, "Restored saved temperature from previous session: " + savedTemp);
+                }
             }
             
             // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
@@ -1126,11 +1139,13 @@ public class ServiceManager {
                             String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                             if (currentTemp != null) {
                                 final String savedTemperature = currentTemp;
+                                // Save temperature to SharedPreferences before lowering
+                                sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), savedTemperature).apply();
                                 // Set temperature to 16 to force compressor on
                                 updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), "16");
-                                Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 20 seconds");
+                                Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 10 seconds");
                                 
-                                // Restore temperature after 20 seconds, but only if user hasn't changed it
+                                // Restore temperature after 10 seconds, but only if user hasn't changed it
                                 backgroundHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
@@ -1138,8 +1153,11 @@ public class ServiceManager {
                                         // Only restore if temperature is still 16 (user hasn't changed it)
                                         if (currentTemp != null && currentTemp.startsWith("16")) {
                                             updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
+                                            sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
                                             Log.w(TAG, "Temperature restored to " + savedTemperature);
                                         } else {
+                                            // User changed temperature, clear saved value
+                                            sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
                                             Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
                                         }
                                     }
