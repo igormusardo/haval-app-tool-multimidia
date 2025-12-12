@@ -1112,21 +1112,16 @@ public class ServiceManager {
             if (!b && defrostCompressorTask != null) {
                 backgroundHandler.removeCallbacks(defrostCompressorTask);
                 defrostCompressorTask = null;
-                // Clear saved temperature when disabling defrost
-                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
                 Log.w(TAG, "Defrost compressor task cancelled and saved temperature cleared");
                 return;
             }
             
-            // If enabling defrost, check if there's a saved temperature from previous session
-            if (b) {
-                String savedTemp = sharedPreferences.getString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), null);
-                if (savedTemp != null) {
-                    // Restore the saved temperature
-                    updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemp);
-                    sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
-                    Log.w(TAG, "Restored saved temperature from previous session: " + savedTemp);
-                }
+            String savedTemp = sharedPreferences.getString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), null);
+            if (savedTemp != null) {
+                // Restore the saved temperature
+                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemp);
+                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
+                Log.w(TAG, "Restored saved temperature from previous session: " + savedTemp);
             }
             
             // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
@@ -1169,6 +1164,7 @@ public class ServiceManager {
                         long delay = 120000; // Default 2 minutes
                         if (currentTemp != null) {
                             try {
+                                sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), currentTemp).apply();
                                 float tempValue = Float.parseFloat(currentTemp);
                                 if (tempValue >= 24.5f) {
                                     delay = 60000; // 1 minute for high temperatures
