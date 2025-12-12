@@ -1164,8 +1164,20 @@ public class ServiceManager {
                                 }, 10000);
                             }
                         }
-                        // Schedule next execution in 2 minutes (120000 ms)
-                        backgroundHandler.postDelayed(this, 120000);
+                        // Schedule next execution: 1 minute if temperature >= 24.5, otherwise 2 minutes
+                        String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                        long delay = 120000; // Default 2 minutes
+                        if (currentTemp != null) {
+                            try {
+                                float tempValue = Float.parseFloat(currentTemp);
+                                if (tempValue >= 24.5f) {
+                                    delay = 60000; // 1 minute for high temperatures
+                                }
+                            } catch (NumberFormatException e) {
+                                Log.e(TAG, "Error parsing temperature: " + currentTemp, e);
+                            }
+                        }
+                        backgroundHandler.postDelayed(this, delay);
                     }
                 };
                 // Start the task immediately
