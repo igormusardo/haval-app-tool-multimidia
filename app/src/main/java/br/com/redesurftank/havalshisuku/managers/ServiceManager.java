@@ -1150,7 +1150,7 @@ public class ServiceManager {
                         }
 
 
-                        if (blowerMode != null && !blowerMode.equals("4") && !fanSpeed.equals("0") {
+                        if (blowerMode != null && !blowerMode.equals("4") && !fanSpeed.equals("0")) {
                             String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                             if (currentTemp != null) {
                                 final String savedTemperature = currentTemp;
