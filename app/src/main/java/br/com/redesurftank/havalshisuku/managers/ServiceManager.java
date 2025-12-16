@@ -1130,7 +1130,27 @@ public class ServiceManager {
                     @Override
                     public void run() {
                         String blowerMode = getUpdatedData(CarConstants.CAR_HVAC_BLOWER_MODE.getValue());
-                        if (blowerMode != null && !blowerMode.equals("4")) {
+                        String fanSpeed = getUpdatedData(CarConstants.CAR_HVAC_FAN_SPEED.getValue());
+
+                        // Schedule next execution: 1 minute if temperature >= 24.5, otherwise 2 minutes
+                        String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
+                        long delay = 120000; // Default 2 minutes
+                        long coolerDelay = 12000; //Default 10 seconds
+                        if (currentTemp != null) {
+                            try {
+                                sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), currentTemp).apply();
+                                float tempValue = Float.parseFloat(currentTemp);
+                                if (tempValue >= 24.5f) {
+                                    delay = 80000; // 80 seconds for high temperatures
+                                    coolerDelay = 8000; // 8 seconds for high temperatures
+                                }
+                            } catch (NumberFormatException e) {
+                                Log.e(TAG, "Error parsing temperature: " + currentTemp, e);
+                            }
+                        }
+
+
+                        if (blowerMode != null && !blowerMode.equals("4") && !fanSpeed.equals("0") {
                             String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                             if (currentTemp != null) {
                                 final String savedTemperature = currentTemp;
@@ -1156,21 +1176,7 @@ public class ServiceManager {
                                             Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
                                         }
                                     }
-                                }, 10000);
-                            }
-                        }
-                        // Schedule next execution: 1 minute if temperature >= 24.5, otherwise 2 minutes
-                        String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
-                        long delay = 120000; // Default 2 minutes
-                        if (currentTemp != null) {
-                            try {
-                                sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), currentTemp).apply();
-                                float tempValue = Float.parseFloat(currentTemp);
-                                if (tempValue >= 24.5f) {
-                                    delay = 60000; // 1 minute for high temperatures
-                                }
-                            } catch (NumberFormatException e) {
-                                Log.e(TAG, "Error parsing temperature: " + currentTemp, e);
+                                }, coolerDelay);
                             }
                         }
                         backgroundHandler.postDelayed(this, delay);
