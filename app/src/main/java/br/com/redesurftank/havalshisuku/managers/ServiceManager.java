@@ -519,6 +519,15 @@ public class ServiceManager {
                 Log.w(TAG, "Intelligent AC switch disabled by user preference");
             }
             boolean isForceEnableFrontDefrost = sharedPreferences.getBoolean(SharedPreferencesKeys.ENABLE_FRONT_DEFROST.getKey(), false);
+
+            String savedTemp = sharedPreferences.getString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), null);
+            if (savedTemp != null) {
+                // Restore the saved temperature
+                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemp);
+                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
+                Log.w(TAG, "Restored saved temperature from previous session: " + savedTemp);
+            }
+
             setFrontDefrostEnabled(isForceEnableFrontDefrost);
 
             ensureSteeringWheelButtonIntegration();
@@ -1115,15 +1124,7 @@ public class ServiceManager {
                 Log.w(TAG, "Defrost compressor task cancelled and saved temperature cleared");
                 return;
             }
-            
-            String savedTemp = sharedPreferences.getString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), null);
-            if (savedTemp != null) {
-                // Restore the saved temperature
-                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemp);
-                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
-                Log.w(TAG, "Restored saved temperature from previous session: " + savedTemp);
-            }
-            
+                        
             // If enabling defrost, start recurring task to check blower mode and temporarily lower temperature to force compressor
             if (b && defrostCompressorTask == null) {
                 defrostCompressorTask = new Runnable() {
