@@ -1121,6 +1121,8 @@ public class ServiceManager {
             if (!b && defrostCompressorTask != null) {
                 backgroundHandler.removeCallbacks(defrostCompressorTask);
                 defrostCompressorTask = null;
+                // Clear any pending saved temperature when disabling defrost
+                sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
                 Log.w(TAG, "Defrost compressor task cancelled and saved temperature cleared");
                 return;
             }
@@ -1137,13 +1139,15 @@ public class ServiceManager {
                         String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                         long delay = 120000; // Default 2 minutes
                         long coolerDelay = 12000; //Default 10 seconds
+                        String coolerTemp = "16.0";
                         if (currentTemp != null) {
                             try {
                                 sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), currentTemp).apply();
                                 float tempValue = Float.parseFloat(currentTemp);
                                 if (tempValue >= 24.5f) {
-                                    delay = 80000; // 80 seconds for high temperatures
+                                    delay = 72000; // 80 seconds for high temperatures
                                     coolerDelay = 8000; // 8 seconds for high temperatures
+                                    coolerTemp = "18.0";
                                 }
                             } catch (NumberFormatException e) {
                                 Log.e(TAG, "Error parsing temperature: " + currentTemp, e);
@@ -1151,14 +1155,16 @@ public class ServiceManager {
                         }
 
 
-                        if (blowerMode != null && !blowerMode.equals("4") && !fanSpeed.equals("0")) {
+                        if (blowerMode != null && !blowerMode.equals("4") && fanSpeed != null && !fanSpeed.equals("0")) {
                             currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                             if (currentTemp != null) {
                                 final String savedTemperature = currentTemp;
+                                final String coolerTempFinal = coolerTemp;
+                                final long coolerDelayFinal = coolerDelay;
                                 // Save temperature to SharedPreferences before lowering
                                 sharedPreferences.edit().putString(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey(), savedTemperature).apply();
                                 // Set temperature to 16 to force compressor on
-                                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), "16");
+                                updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), coolerTempFinal);
                                 Log.w(TAG, "Temporarily lowering temperature to 16 to force compressor, will restore to " + savedTemperature + " in 10 seconds");
                                 
                                 // Restore temperature after 10 seconds, but only if user hasn't changed it
@@ -1167,7 +1173,17 @@ public class ServiceManager {
                                     public void run() {
                                         String currentTemp = getUpdatedData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue());
                                         // Only restore if temperature is still 16 (user hasn't changed it)
-                                        if (currentTemp != null && currentTemp.startsWith("16")) {
+                                        boolean shouldRestore = false;
+                                        if (currentTemp != null) {
+                                            try {
+                                                float cur = Float.parseFloat(currentTemp);
+                                                float target = Float.parseFloat(coolerTempFinal);
+                                                shouldRestore = Math.abs(cur - target) < 0.01f;
+                                            } catch (NumberFormatException e) {
+                                                Log.e(TAG, "Error parsing temperature for restore check: " + currentTemp, e);
+                                            }
+                                        }
+                                        if (shouldRestore) {
                                             updateData(CarConstants.CAR_HVAC_DRIVER_TEMPERATURE.getValue(), savedTemperature);
                                             sharedPreferences.edit().remove(SharedPreferencesKeys.SAVED_DEFROST_TEMPERATURE.getKey()).apply();
                                             Log.w(TAG, "Temperature restored to " + savedTemperature);
@@ -1177,7 +1193,7 @@ public class ServiceManager {
                                             Log.w(TAG, "Temperature was changed by user to " + currentTemp + ", not restoring to " + savedTemperature);
                                         }
                                     }
-                                }, coolerDelay);
+                                }, coolerDelayFinal);
                             }
                         }
                         backgroundHandler.postDelayed(this, delay);
